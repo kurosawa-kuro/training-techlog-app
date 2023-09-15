@@ -30,62 +30,95 @@ describe 'User', type: :system do
       end
     end
 
-    context '異常系' do
-      context 'nicknameが空の場合' do
-        let(:nickname) { '' }
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count) # Userが増えない
-          expect(page).to have_content("Nickname can't be blank") # エラーメッセージのチェック
-        end
+    context 'nicknameが空の場合' do
+      let(:nickname) { '' }
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count) # Userが増えない
+        expect(page).to have_content("Nickname can't be blank") # エラーメッセージのチェック
       end
+    end
 
-      context 'nicknameが20文字を超える場合' do
-        let(:nickname) { 'あ' * 21 }
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count)
-          expect(page).to have_content('Nickname is too long (maximum is 20 character')
-        end
+    context 'nicknameが20文字を超える場合' do
+      let(:nickname) { 'あ' * 21 }
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count)
+        expect(page).to have_content('Nickname is too long (maximum is 20 character')
       end
+    end
 
-      context 'emailが空の場合' do
-        let(:email) { '' }
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count)
-          expect(page).to have_content("Email can't be blank")
-        end
+    context 'emailが空の場合' do
+      let(:email) { '' }
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count)
+        expect(page).to have_content("Email can't be blank")
       end
+    end
 
-      context 'passwordが空の場合' do
-        let(:password) { '' }
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count)
-          expect(page).to have_content("Password can't be blank")
-        end
+    context 'passwordが空の場合' do
+      let(:password) { '' }
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count)
+        expect(page).to have_content("Password can't be blank")
       end
+    end
 
-      context 'passwordが6文字未満の場合' do
-        let(:password) { 'a' * 5 }
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count)
-          expect(page).to have_content('Password is too short (minimum is 6 characters')
-        end
+    context 'passwordが6文字未満の場合' do
+      let(:password) { 'a' * 5 }
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count)
+        expect(page).to have_content('Password is too short (minimum is 6 characters')
       end
+    end
 
-      context 'passwordが128文字を超える場合' do
-        let(:password) { 'a' * 129 }
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count)
-          expect(page).to have_content('Password is too long (maximum is 128 characters)')
-        end
+    context 'passwordが128文字を超える場合' do
+      let(:password) { 'a' * 129 }
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count)
+        expect(page).to have_content('Password is too long (maximum is 128 characters)')
       end
+    end
 
-      context 'passwordとpassword_confirmationが一致しない場合' do
-        let(:password_confirmation) { "#{password}hoge" } # passwordに"hoge"を足した文字列にする
-        it 'ユーザーを作成せず、エラーメッセージを表示する' do
-          expect { subject }.not_to change(User, :count)
-          expect(page).to have_content("Password confirmation doesn't match Password")
-        end
+    context 'passwordとpassword_confirmationが一致しない場合' do
+      let(:password_confirmation) { "#{password}hoge" } # passwordに"hoge"を足した文字列にする
+      it 'ユーザーを作成せず、エラーメッセージを表示する' do
+        expect { subject }.not_to change(User, :count)
+        expect(page).to have_content("Password confirmation doesn't match Password")
       end
     end
   end
+
+  describe 'ログイン機能の検証' do
+    before do
+      create(:user, nickname: nickname, email: email, password: password, password_confirmation: password) # 事前にユーザー作成
+    end
+  
+    context '正常系' do
+      before do
+        visit '/users/sign_in'
+        fill_in 'user_email', with: email
+        fill_in 'user_password', with: password
+        click_button 'ログイン'
+      end
+
+      it 'ログインに成功し、トップページにリダイレクトする' do
+        expect(current_path).to eq('/')
+      end
+    end
+  
+    # context '異常系' do
+    #   let(:password) { 'NGpassword' }
+
+    #   before do
+    #     visit '/users/sign_in'
+    #     fill_in 'user_email', with: email
+    #     fill_in 'user_password', with: password
+    #     click_button 'ログイン'
+    #   end
+
+    #   it 'ログインに失敗し、ページ遷移しない' do
+    #     expect(current_path).to eq('/users/sign_in')
+    #   end
+    # end
+  end
 end
+
